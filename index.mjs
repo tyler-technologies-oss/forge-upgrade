@@ -1,0 +1,214 @@
+#!/usr/bin/env node
+
+import replace from 'replace-in-file';
+import ora from 'ora';
+import path from 'canonical-path';
+import chalk from 'chalk';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+import fs from 'fs';
+import { glob } from 'glob';
+import { fileURLToPath } from 'url';
+import { executeHtmlMigrations, executeJSXMigrations } from './migration-utils.mjs';
+import { logInfo, logError, logSuccess, logWarn, logBreak } from './log.mjs';
+
+const filename = fileURLToPath(import.meta.url);
+const packageRoot = path.join(path.dirname(fs.realpathSync(filename)));
+const argv = yargs(hideBin(process.argv)).argv;
+const DEFAULT_UPGRADE_CONFIGURATION = 'forge-3.0';
+
+if (argv.usage || argv.help) {
+  console.log(`
+  Usage: forge-upgrade [options]
+
+  Options:
+    --path                 Specify the root path for the upgrade (default: current directory)
+    --dry-run              Perform a dry run without modifying any files
+    --no-replace           Disables replace operations.
+    --no-migrate           Disables code migrations.
+    --ignore-conditional   Ignores operations with conditions.
+    --ignore               Comma-separated list of globs to ignore during the upgrade
+    --configuration        Specify the upgrade configuration (default: ${DEFAULT_UPGRADE_CONFIGURATION})
+    --verbose              Enable verbose logging
+  `);
+  process.exit(0);
+}
+
+const CONFIGURATION_MIGRATION_MAP = {
+  'forge-3.0': {
+    html: [
+      { name: 'Forge Typography Class', path: './migrations/html/v3/posthtml-forge-typography.mjs' },
+      { name: 'Forge Card', path: './migrations/html/v3/posthtml-forge-card.mjs' },
+      { name: 'Forge Density', path: './migrations/html/v3/posthtml-forge-density.mjs' },
+      { name: 'Forge Buttons', path: './migrations/html/v3/posthtml-forge-button.mjs' },
+      { name: 'Forge Checkboxes, Radios, Switches', path: './migrations/html/v3/posthtml-forge-checkbox-radio-switch.mjs' },
+      { name: 'Forge Lists and List Items', path: './migrations/html/v3/posthtml-forge-list.mjs' },
+      { name: 'Forge Tabs', path: './migrations/html/v3/posthtml-forge-tabs.mjs' },
+      { name: 'Forge Tooltip', path: './migrations/html/v3/posthtml-forge-tooltip.mjs' },
+      { name: 'Forge Label Value', path: './migrations/html/v3/posthtml-forge-label-value.mjs' },
+      { name: 'Forge Badge', path: './migrations/html/v3/posthtml-forge-badge.mjs' },
+      { name: 'Forge Field', path: './migrations/html/v3/posthtml-forge-field.mjs' },
+      { name: 'Forge Button Toggle', path: './migrations/html/v3/posthtml-forge-button-toggle.mjs' },
+    ],
+    jsx: [
+      { name: 'Forge Card', path: './migrations/jsx/v3/jscodeshift-forge-card.cjs' },
+      { name: 'Forge Density', path: './migrations/jsx/v3/jscodeshift-forge-density.cjs' },
+      { name: 'Forge Buttons', path: './migrations/jsx/v3/jscodeshift-forge-button.cjs' },
+      { name: 'Forge Checkboxes, Radios, Switches', path: './migrations/jsx/v3/jscodeshift-forge-checkbox-radio-switch.cjs' },
+      { name: 'Forge Lists and List Items', path: './migrations/jsx/v3/jscodeshift-forge-list.cjs' },
+      { name: 'Forge Tabs', path: './migrations/jsx/v3/jscodeshift-forge-tabs.cjs' },
+      { name: 'Forge Tooltip', path: './migrations/jsx/v3/jscodeshift-forge-tooltip.cjs' },
+      { name: 'Forge Label Value', path: './migrations/jsx/v3/jscodeshift-forge-label-value.cjs' },
+      { name: 'Forge Badge', path: './migrations/jsx/v3/jscodeshift-forge-badge.cjs' },
+      { name: 'Forge Field', path: './migrations/jsx/v3/jscodeshift-forge-field.cjs' },
+      { name: 'Forge Button Toggle', path: './migrations/jsx/v3/jscodeshift-forge-button-toggle.cjs' },
+    ]
+  }
+}
+
+const NODE_MODULES_GLOB = '**/node_modules/**';
+
+try {
+  const dryRun = argv.dryRun ?? false;
+  const replace = argv.replace ?? true;
+  const migrate = argv.migrate ?? true;
+  const verbose = argv.verbose ?? false;
+  const ignoreGlobs = argv.ignore ? argv.ignore.split(',').map(p => p.trim()).filter(p => !!p) : [];
+  const ignoreConditional = argv.ignoreConditional ?? false;
+  const configuration = argv.configuration ?? DEFAULT_UPGRADE_CONFIGURATION;
+  const filePath = path.join(packageRoot, 'configurations', `${configuration}.json`);
+  const file = fs.readFileSync(filePath, 'utf-8');
+  const { name, operations } = JSON.parse(file);
+  const rootPath = argv.path ?? '.';
+  const changedFiles = new Set();
+
+  if (!name || !operations || !operations.length) {
+    throw new Error(`Invalid upgrade configuration specified: "${configuration}"`);
+  }
+
+  if (!rootPath) {
+    throw new Error('A valid `--path` argument must be provided.');
+  }
+
+  if (dryRun) {
+    logWarn('This is a dry run. No files will be modified.\n');
+  }
+
+  logInfo(`Using path: "${path.resolve(rootPath)}"`);
+  logInfo(`Using upgrade configuration: "${name}" (${configuration})`);
+
+  // Replace operations
+  if (replace && operations.length) {
+    logInfo(`Found ${operations.length} replace operation(s)\n`);
+
+    try {
+      const spinner = ora(`Performing upgrade operation (this may take a while)...\n\n`);
+      spinner.start();
+
+      for (const { files, patterns, conditions } of operations) {
+        const sources = path.join(rootPath, files);
+        const from = patterns.map(p => new RegExp(p.from, 'g'));
+
+        // If our operation has conditions, we need to check if any of the conditions are met before proceeding
+        if (!ignoreConditional && conditions?.length) {
+          const expressions = conditions.map(c => new RegExp(c, 'g'));
+          const matchedFiles = await glob(sources, { ignore: [NODE_MODULES_GLOB, ...ignoreGlobs] });
+          const canExecuteOperation = matchedFiles.some(file => {
+            const contents = fs.readFileSync(file, 'utf-8');
+            return expressions.some(e => e.test(contents));
+          });
+          if (!canExecuteOperation) {
+            continue;
+          }
+        }
+
+        const to = patterns.map(p => p.to);
+        const modifiedFiles = await executeReplaceOperation({ files: sources, from, to, dry: dryRun, ignore: ignoreGlobs });
+        modifiedFiles.forEach(file => changedFiles.add(file));
+      }
+
+      spinner.succeed();
+    } catch (e) {
+      spinner.fail();
+      logBreak()
+      logError(e.stack);
+    }
+  }
+
+  // Migrations
+  if (migrate && CONFIGURATION_MIGRATION_MAP[configuration]) {
+    // HTML
+    const htmlMigrations = CONFIGURATION_MIGRATION_MAP[configuration].html;
+    if (htmlMigrations?.length) {
+      const globPath = path.join(rootPath, '**/*.html');
+      const htmlFiles = await glob(globPath, { ignore: [NODE_MODULES_GLOB, ...ignoreGlobs] });
+      if (htmlFiles.length) {
+        logInfo(`Found ${htmlMigrations.length} HTML migration(s)\n`);
+
+        const modifiedHtmlFiles = await executeHtmlMigrations({
+          files: htmlFiles,
+          migrations: htmlMigrations,
+          dryRun
+        });
+        modifiedHtmlFiles.forEach(file => changedFiles.add(file));
+      }
+    }
+
+    // JSX/TSX
+    const jsxMigrations = CONFIGURATION_MIGRATION_MAP[configuration].jsx;
+    if (jsxMigrations?.length) {
+      const globPath = path.join(rootPath, '**/*.{jsx,tsx}');
+      const jsxFiles = await glob(globPath, { ignore: [NODE_MODULES_GLOB, ...ignoreGlobs] });
+      if (jsxFiles.length) {
+        logInfo(`Found ${jsxMigrations.length} JSX/TSX migration(s)\n`);
+
+        const modifiedJSXFiles = await executeJSXMigrations({
+          files: jsxFiles,
+          migrations: jsxMigrations,
+          dryRun,
+          verbose
+        });
+        modifiedJSXFiles.forEach(file => changedFiles.add(file));
+      }
+    }
+  }
+
+  logBreak()
+
+  if (changedFiles.size) {
+    const prefix = dryRun ? 'Would have modified' : 'Modified';
+    logWarn(`${prefix} ${changedFiles.size} file${changedFiles.size > 1 ? 's' : ''}:`);
+    changedFiles.forEach(file => console.log(`  ${chalk.greenBright('[Modified]')} ${file}`));
+    logBreak()
+    logSuccess(`Upgrade complete${dryRun ? chalk.yellow(' (dry run)') : ''}.`);
+  } else {
+    logBreak()
+    if (dryRun) {
+      logSuccess(`Upgrade complete ${chalk.yellow('(dry run)')}.`);
+    } else {
+      logWarn('Upgrade complete. No files were modified.');
+    }
+  }
+} catch (e) {
+  logBreak()
+  logError(e.message ?? e);
+}
+
+async function executeReplaceOperation({ files, from, to, dry, ignore }) {
+  const options = {
+    files,
+    from,
+    to,
+    dry,
+    allowEmptyPaths: true,
+    ignore: [
+      'node_modules/**/*',
+      '**/*/node_modules/**/*',
+      ...ignore
+    ]
+  };
+  const results = await replace(options);
+  return results
+    .filter(result => result.hasChanged)
+    .map(result => result.file);
+}
