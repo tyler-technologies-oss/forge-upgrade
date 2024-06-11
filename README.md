@@ -16,19 +16,6 @@ npx @tylertech/forge-upgrade
 
 > **Important:** You must be on NodeJS version 16 or later.
 
-## Multiple Execution
-
-This utility can be run multiple times on the same project. With that said, there are specific
-operations that are only expected to be run the first time (because they would conflict with 
-each other when run multiple times) so they will attempt to conditionally execute themselves by
-first checking for specific conditions. This works most of the time, but depending on the
-usage of various conditions in your project, it may not execute and could require manual
-evaluation. **Always review your changes with source control after running this utility**.
-
-> You can also disable conditional checks on subsequent runs via the `--ignore-conditional` flag.
-> If you have already run the utility on a project, using this flag is recommended and will
-> improve performance by skipping unnecessary checks.
-
 ## Configurations
 
 Upgrades are run from a "configuration" file within this utility. The table below will help you decide which configuration to
@@ -53,7 +40,6 @@ The utility will accept the following arguments:
 | `--configuration <name>` | The name of the upgrade configuration to use. Defaults to most recent configuration.
 | `--no-replace`           | Disables replace operations.
 | `--no-migrate`           | Disables code migrations.
-| `--ignore-conditional`   | Ignores operations with conditions.
 | `--dry-run`              | Runs the utility without modifying any files and prints out what it would do if ran without this flag.
 | `--ignore`               | Paths or globs of files to ignore. (ex. `--ignore "**/*/my-directory/**/*"`). Note: separate multiple values with a comma.
 | `--verbose`              | Enables verbose logging.

@@ -5,6 +5,7 @@ import cpath from 'canonical-path';
 import { pathToFileURL } from 'url';
 import { exec } from 'child_process';
 import fs from 'fs';
+import crypto from 'crypto';
 import ora from 'ora';
 import { logBreak, logError, logInfo } from './log.mjs';
 import { fileURLToPath } from 'url';
@@ -53,30 +54,51 @@ export async function executeHtmlMigrations({ files, migrations, dryRun }) {
   return modifiedFiles;
 }
 
+function computeFileHash(path) {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash('sha256');
+    const rs = fs.createReadStream(path);
+    rs.on('error', reject);
+    rs.on('data', chunk => hash.update(chunk));
+    rs.on('end', () => resolve(hash.digest('hex')));
+  });
+}
+
 /**
- * Executes JSX/TSX migrations.
+ * Executes jscodeshift migrations.
  */
-export async function executeJSXMigrations({ files, migrations, dryRun, verbose }) {
-  const spinner = ora(`Executing JSX/TSX migrations... ${migrations.map(m => `\n  - ${m.name}`).join('')}`).start();
+export async function executeJscodeshiftMigrations({ files, migrations, dryRun, verbose, parser }) {
+  const spinner = ora(`Executing ${parser === 'tsx' ? 'JSX/TSX' : 'JS/TS'} migrations... ${migrations.map(m => `\n  - ${m.name}`).join('')}`).start();
   const modifiedFiles = new Set();
+  const options = {
+    dry: dryRun,
+    parser,
+    verbose: verbose ? 1 : 0,
+    silent: !verbose
+  };
 
   try {
+    // Compute the hash of each file so we can check if it was modified later
+    const fileHashMap = new Map();
     for (const file of files) {
-      for (const { name, path } of migrations) {
-        const options = {
-          dry: dryRun,
-          parser: 'tsx',
-          verbose: verbose ? 1 : 0,
-          silent: !verbose
-        };
-        const { ok, error } = await jscodeshift(cpath.resolve(packageRoot, path), [file], options)
-        if (ok) {
-          modifiedFiles.add(file);
-        } else if (error) {
-          spinner.clear();
-          spinner.frame();
-          logError(`An unexpected error occurred while migrating file: "${file}" using migration: "${name}".`);
+      const hash = await computeFileHash(file);
+      fileHashMap.set(file, hash);
+    }
+
+    for (const { name, path } of migrations) {
+      const { ok, error } = await jscodeshift(cpath.resolve(packageRoot, path), files, options)
+      if (ok) {
+        // Check if the file was modified
+        for (const file of files) {
+          const hash = await computeFileHash(file);
+          if (fileHashMap.get(file) !== hash) {
+            modifiedFiles.add(file);
+          }
         }
+      } else if (error) {
+        spinner.clear();
+        spinner.frame();
+        logError(`An unexpected error occurred while migrating file: "${file}" using migration: "${name}".`);
       }
     }
     spinner.succeed();

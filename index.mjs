@@ -9,7 +9,7 @@ import { hideBin } from 'yargs/helpers';
 import fs from 'fs';
 import { glob } from 'glob';
 import { fileURLToPath } from 'url';
-import { executeHtmlMigrations, executeJSXMigrations } from './migration-utils.mjs';
+import { executeHtmlMigrations, executeJscodeshiftMigrations } from './migration-utils.mjs';
 import { logInfo, logError, logSuccess, logWarn, logBreak } from './log.mjs';
 
 const filename = fileURLToPath(import.meta.url);
@@ -26,7 +26,6 @@ if (argv.usage || argv.help) {
     --dry-run              Perform a dry run without modifying any files
     --no-replace           Disables replace operations.
     --no-migrate           Disables code migrations.
-    --ignore-conditional   Ignores operations with conditions.
     --ignore               Comma-separated list of globs to ignore during the upgrade
     --configuration        Specify the upgrade configuration (default: ${DEFAULT_UPGRADE_CONFIGURATION})
     --verbose              Enable verbose logging
@@ -62,6 +61,9 @@ const CONFIGURATION_MIGRATION_MAP = {
       { name: 'Forge Badge', path: './migrations/jsx/v3/jscodeshift-forge-badge.cjs' },
       { name: 'Forge Field', path: './migrations/jsx/v3/jscodeshift-forge-field.cjs' },
       { name: 'Forge Button Toggle', path: './migrations/jsx/v3/jscodeshift-forge-button-toggle.cjs' },
+    ],
+    js: [
+      { name: 'Dialog Options', path: './migrations/js/v3/jscodeshift-dialog-options.cjs' },
     ]
   }
 }
@@ -74,7 +76,6 @@ try {
   const migrate = argv.migrate ?? true;
   const verbose = argv.verbose ?? false;
   const ignoreGlobs = argv.ignore ? argv.ignore.split(',').map(p => p.trim()).filter(p => !!p) : [];
-  const ignoreConditional = argv.ignoreConditional ?? false;
   const configuration = argv.configuration ?? DEFAULT_UPGRADE_CONFIGURATION;
   const filePath = path.join(packageRoot, 'configurations', `${configuration}.json`);
   const file = fs.readFileSync(filePath, 'utf-8');
@@ -101,25 +102,25 @@ try {
   if (replace && operations.length) {
     logInfo(`Found ${operations.length} replace operation(s)\n`);
 
+    const initial = await prompt('Is this the first time running this upgrade for this project? (y/n) ', 'boolean');
+    logBreak();
+
+    if (!initial) {
+      logInfo(`Skipping all one-time upgrade operations.\n`);
+    } else {
+      logInfo(`Performing all upgrade operations, including one-time operations.\n`);
+    }
+
     try {
       const spinner = ora(`Performing upgrade operation (this may take a while)...\n\n`);
       spinner.start();
 
-      for (const { files, patterns, conditions } of operations) {
+      for (const { files, patterns, once } of operations) {
         const sources = path.join(rootPath, files);
         const from = patterns.map(p => new RegExp(p.from, 'g'));
 
-        // If our operation has conditions, we need to check if any of the conditions are met before proceeding
-        if (!ignoreConditional && conditions?.length) {
-          const expressions = conditions.map(c => new RegExp(c, 'g'));
-          const matchedFiles = await glob(sources, { ignore: [NODE_MODULES_GLOB, ...ignoreGlobs] });
-          const canExecuteOperation = matchedFiles.some(file => {
-            const contents = fs.readFileSync(file, 'utf-8');
-            return expressions.some(e => e.test(contents));
-          });
-          if (!canExecuteOperation) {
-            continue;
-          }
+        if (once && !initial) {          
+          continue;
         }
 
         const to = patterns.map(p => p.to);
@@ -162,13 +163,33 @@ try {
       if (jsxFiles.length) {
         logInfo(`Found ${jsxMigrations.length} JSX/TSX migration(s)\n`);
 
-        const modifiedJSXFiles = await executeJSXMigrations({
+        const modifiedJSXFiles = await executeJscodeshiftMigrations({
           files: jsxFiles,
           migrations: jsxMigrations,
           dryRun,
-          verbose
+          verbose,
+          parser: 'tsx'
         });
         modifiedJSXFiles.forEach(file => changedFiles.add(file));
+      }
+    }
+
+    // JS/TS
+    const jsMigrations = CONFIGURATION_MIGRATION_MAP[configuration].js;
+    if (jsMigrations?.length) {
+      const globPath = path.join(rootPath, '**/*.{js,ts}');
+      const jsFiles = await glob(globPath, { ignore: [NODE_MODULES_GLOB, ...ignoreGlobs] });
+      if (jsFiles.length) {
+        logInfo(`Found ${jsMigrations.length} JS/TS migration(s)\n`);
+
+        const modifiedJSFiles = await executeJscodeshiftMigrations({
+          files: jsFiles,
+          migrations: jsMigrations,
+          dryRun,
+          verbose,
+          parser: 'ts'
+        });
+        modifiedJSFiles.forEach(file => changedFiles.add(file));
       }
     }
   }
@@ -211,4 +232,39 @@ async function executeReplaceOperation({ files, from, to, dry, ignore }) {
   return results
     .filter(result => result.hasChanged)
     .map(result => result.file);
+}
+
+/**
+ * Prompts the user for input.
+ * @param {string} question - The question to ask the user.
+ * @param {string} type - The type of input to expect.
+ * @returns {Promise<string|boolean>} The user's input.
+ */
+async function prompt(question, type) {
+  if (!question) {
+    throw new Error('A question must be provided');
+  }
+  if (!type) {
+    throw new Error('A type must be provided');
+  }
+
+  question = `${chalk.greenBright('?')} ${question}`;
+
+  process.stdout.write(question);
+  process.stdin.resume();
+  process.stdin.setEncoding('utf-8');
+
+  return new Promise(resolve => {
+    process.stdin.once('data', data => {
+      process.stdin.pause();
+      const value = data.trim().toLowerCase();
+      switch (type) {
+        case 'boolean':
+          resolve(value.toLowerCase() === 'y');
+          break;
+        default:
+          resolve(value);
+      }
+    });
+  });
 }

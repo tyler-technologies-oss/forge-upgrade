@@ -3,6 +3,9 @@
   "version": "2.0.0-next.1",
   "description": "Automated upgrade utility for the Tyler Forge™ based projects.",
   "main": "index.mjs",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "forge-upgrade": "index.mjs"
   },

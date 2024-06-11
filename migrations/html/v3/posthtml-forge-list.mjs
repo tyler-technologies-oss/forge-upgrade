@@ -2,13 +2,13 @@ import matchHelper from 'posthtml-match-helper';
 import { findAllChildNodes, setAttr, removeAttr } from '../posthtml-helpers.mjs';
 
 export default function transform(tree) {
-  // Replace the "static" attribute with "noninteractive"
+  // Remove the "static" attribute as list items are now static by default
   tree.match(matchHelper('forge-list[static]'), node => {
     removeAttr(node, 'static');
     return node;
   });
 
-  // Replace the "static" attribute with "noninteractive"
+  // Remove the "static" attribute as list items are now static by default
   tree.match(matchHelper('forge-list-item[static]'), node => {
     removeAttr(node, 'static');
     return node;

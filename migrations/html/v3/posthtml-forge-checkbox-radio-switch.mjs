@@ -7,7 +7,7 @@ export default function transform(tree) {
     { tag: 'forge-checkbox' },
     { tag: 'forge-radio' }
   ], node => {
-    const nestedInput = node.content.find(child => child.tag === 'input');
+    const nestedInput = node.content?.find(child => child.tag === 'input');
     if (!nestedInput) {
       return node;
     }

@@ -73,9 +73,6 @@ export default function transform(tree) {
       node.attrs = {};
     }
 
-    node.attrs.role = 'presentation';
-    node.attrs.tabindex = '-1';
-
     return node;
   });
 

@@ -3,24 +3,12 @@
   "operations": [
     {
       "files": "**/*.{ts,js,tsx,jsx,scss,css,less,html,htm,mdx,md,aspx,asp,cshtml,java,php}",
-      "description": "Conditions in this operation are only expected to be run once.",
-      "conditions": [
-        "<.*forge-typography(?!--)",
-        "--mdc-theme-{primary,secondary,background,surface,error}",
-        "forge-typography--title",
-        "forge-typography--headline",
-        "forge-typography--subtitle",
-        "@tylertech\/forge\/styles/",
-        "forge-popup",
-        "forgePopup",
-        "ForgePopupModule",
-        "forge-tab-bar-activate",
-        "forge-switch-select"
-      ],
+      "once": true,
       "patterns": [
         { "from": "forge-typography--body1", "to": "forge-typography--temp-body2" },
         { "from": "forge-typography--body2", "to": "forge-typography--body1" },
-        { "from": "forge-typography--temp-body2", "to": "forge-typography--body2" }
+        { "from": "forge-typography--temp-body2", "to": "forge-typography--body2" },
+        { "from": "IPaginatorChangeEvent", "to": "IPaginatorChangeEventData" }
       ]
     },
     {
@@ -52,10 +40,10 @@
         { "from": "floatLabelType = 'always'", "to": "floatLabel = true" },
         { "from": "floatLabelType = \"always\"", "to": "floatLabel = true" },
         
-        { "from": "IPaginatorChangeEvent", "to": "IPaginatorChangeEventData" },
 
         { "from": "forge-switch-select", "to": "forge-switch-change" },
         { "from": "forge-tab-bar-activate", "to": "forge-tab-bar-change" },
+        { "from": "ITabBarActivateEventData", "to": "ITabBarChangeEventData" },
         { "from": "forge-tab-interacted", "to": "forge-tab-select" },
         
         { "from": "--mdc-theme-primary", "to": "--forge-theme-primary" },
@@ -76,6 +64,7 @@
         { "from": "--mdc-theme-text-secondary-on-light", "to": "--forge-theme-text-medium" },
         { "from": "--mdc-theme-text-disabled-on-light", "to": "--forge-theme-text-low" },
         { "from": "--mdc-theme-text-primary-on-dark", "to": "--forge-theme-text-high-inverse" },
+        { "from": "--forge-drawer-mini-width", "to": "--forge-mini-drawer-width" },
         
         { "from": "--forge-file-picker-max-content-width", "to": "--forge-file-picker-max-width" },
         { "from": "--forge-inline-message-background-color", "to": "--forge-inline-message-background" },

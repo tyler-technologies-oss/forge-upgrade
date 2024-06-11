@@ -21,9 +21,8 @@ module.exports = function transformer(file, api) {
 
 function updateAttributes(node) {
   if (helpers.hasAttribute(node, 'static')) {
-    helpers.renameAttribute(node, 'static', 'noninteractive');
+    helpers.removeAttribute(node, 'static');
   }
-
   return node;
 }
 
