@@ -9,6 +9,7 @@ import crypto from 'crypto';
 import ora from 'ora';
 import { logBreak, logError, logInfo } from './log.mjs';
 import { fileURLToPath } from 'url';
+import customPosthtmlRender from './migrations/html/posthtml-render-custom.mjs';
 
 const filename = fileURLToPath(import.meta.url);
 const packageRoot = cpath.join(cpath.dirname(fs.realpathSync(filename)));
@@ -32,7 +33,19 @@ export async function executeHtmlMigrations({ files, migrations, dryRun }) {
         plugins.push(plugin);
       }
 
-      const result = await posthtml(plugins).process(contents);
+      // We find all self-closing tag names in the contents and pass them to posthtml so it doesn't add a closing tag
+      const selfClosingTags = contents.match(/<[^>]+\/>/g) ?? [];
+      const selfClosingTagNames = selfClosingTags.map(tag => tag.match(/<([^\s>]+)\s|>+/)[1]);
+      
+      const options = {
+        // posthtml options
+        render: customPosthtmlRender,
+
+        // render options
+        singleTags: selfClosingTagNames,
+        closingSingleTag: 'slash'
+      };
+      const result = await posthtml(plugins).process(contents, options);
       const html = result.html.replace(/=""/g, '');
       
       if (html !== contents) {
