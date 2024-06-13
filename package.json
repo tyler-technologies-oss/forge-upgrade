@@ -1,6 +1,6 @@
 {
   "name": "@tylertech/forge-upgrade",
-  "version": "2.0.0-next.1",
+  "version": "2.0.0",
   "description": "Automated upgrade utility for the Tyler Forge™ based projects.",
   "main": "index.mjs",
   "publishConfig": {
@@ -42,6 +42,8 @@
     "yargs": "^17.7.2"
   },
   "devDependencies": {
+    "@auto-it/conventional-commits": "^11.1.6",
+    "@auto-it/first-time-contributor": "^11.1.6",
     "@auto-it/npm": "^11.1.6",
     "auto": "^11.1.6"
   }

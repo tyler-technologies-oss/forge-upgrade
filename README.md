@@ -1,17 +1,19 @@
-# Forge Upgrade
+# Tyler Forge™ Upgrade Utility
 
-This utility can be used to aid in the upgrade process for Forge-based projects.
+This utility can be used to aid in the upgrade process for Tyler Forge™ based projects.
 
-It will run a find/replace and code migrations on all files within the provided `--path`, and attempt to perform any automated replacements that it can for known upgrade migrations.
+It executed run a find/replace and code migrations on all files within the provided `--path`, and attempt to perform any
+automated replacements that it can for known upgrade migrations.
 
-> Manual evaluation should **always** be done after running this utility.
+> Manual evaluation should **always** be done after running this utility, and if you use a code formatter such as Prettier,
+> it is advised to run it after the utility has completed.
 
 ## Usage
 
 Run the utility using `npx`:
 
 ```bash
-npx @tylertech/forge-upgrade
+npx @tylertech/forge-upgrade@latest
 ```
 
 > **Important:** You must be on NodeJS version 16 or later.
@@ -19,7 +21,7 @@ npx @tylertech/forge-upgrade
 ## Configurations
 
 Upgrades are run from a "configuration" file within this utility. The table below will help you decide which configuration to
-use based on the version of TCW/Forge that your project is currently using prior to the upgrade:
+use based on the version of Tyler Forge™ that your project is currently using prior to the upgrade:
 
 | From      | To                        | Configuration
 | ----------| ------------------------- | -------------
@@ -43,4 +45,4 @@ The utility will accept the following arguments:
 | `--dry-run`              | Runs the utility without modifying any files and prints out what it would do if ran without this flag.
 | `--ignore`               | Paths or globs of files to ignore. (ex. `--ignore "**/*/my-directory/**/*"`). Note: separate multiple values with a comma.
 | `--verbose`              | Enables verbose logging.
-| `--help`                 | Prints the help usage.
+| `--help`                 | Prints the help manual.
