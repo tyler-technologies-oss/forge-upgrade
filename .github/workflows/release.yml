@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency: release-${{ github.ref }}
+
+jobs:
+  wf-config:
+    name: Workflow Configuration
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Use Node ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install
+        run: npm ci
+
+      - name: Detect Release Status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.FORGE_NPM_TOKEN }}
+        run: |
+          ## We use `auto version` to calculate whether this is a release build or not
+          VERSION_RESULT=$(npx auto version)
+          echo "Version calculation result: ${VERSION_RESULT}"
+          if [[ "${VERSION_RESULT}" =~ (major|minor|patch|release)$ ]]; then
+            echo "Release: true"
+            echo "release=true" >> $GITHUB_OUTPUT
+          else
+            echo "Release: false"
+            echo "release=false" >> $GITHUB_OUTPUT
+          fi
+  release:
+    name: Release
+    needs: wf-config
+    uses: tyler-technologies-oss/forge-automation-shared/.github/workflows/wf-build-release.yml@v2.10.3
+    if: ${{ needs.wf-config.outputs.is-release == 'true' }}
+    with:
+      PRODUCTION_RELEASE: true
+    secrets:
+      GITHUB_APP_ID: ${{ secrets.FORGE_AUTOBOT_ID }}
+      GITHUB_APP_KEY: ${{ secrets.FORGE_AUTOBOT_SECRET }}
+      NPM_TOKEN: ${{ secrets.FORGE_NPM_TOKEN }}
