@@ -2,7 +2,7 @@
   "name": "Forge 2.0",
   "operations": [
     {
-      "files": "**/*.{ts,js,tsx,jsx,scss,css,html,mdx,md}",
+      "files": "**/*.{ts,js,tsx,jsx,scss,css,html,mdx,md,erb,rb}",
       "patterns": [
         { "from": "tcw-datepicker", "to": "forge-date-picker" },
         { "from": "TcwDatepicker", "to": "ForgeDatePicker" },
@@ -103,7 +103,7 @@
       ]
     },
     {
-      "files": "**/*.{html}",
+      "files": "**/*.{html,erb}",
       "patterns": [
         { "from": "([^<\/])(tyl-)", "to": "$1forge-" }
       ]

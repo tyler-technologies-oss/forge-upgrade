@@ -119,7 +119,7 @@ try {
         const sources = path.join(rootPath, files);
         const from = patterns.map(p => new RegExp(p.from, 'g'));
 
-        if (once && !initial) {          
+        if (once && !initial) {
           continue;
         }
 
@@ -141,7 +141,7 @@ try {
     // HTML
     const htmlMigrations = CONFIGURATION_MIGRATION_MAP[configuration].html;
     if (htmlMigrations?.length) {
-      const globPath = path.join(rootPath, '**/*.html');
+      const globPath = path.join(rootPath, '**/*.{html, html.erb}');
       const htmlFiles = await glob(globPath, { ignore: [NODE_MODULES_GLOB, ...ignoreGlobs] });
       if (htmlFiles.length) {
         logInfo(`Found ${htmlMigrations.length} HTML migration(s)\n`);

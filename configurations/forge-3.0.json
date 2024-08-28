@@ -2,7 +2,7 @@
   "name": "Forge 3.0",
   "operations": [
     {
-      "files": "**/*.{ts,js,tsx,jsx,scss,css,less,html,htm,mdx,md,aspx,asp,cshtml,java,php}",
+      "files": "**/*.{ts,js,tsx,jsx,scss,css,less,html,htm,mdx,md,aspx,asp,cshtml,java,php,erb,rb}",
       "once": true,
       "patterns": [
         { "from": "forge-typography--body1", "to": "forge-typography--temp-body2" },
@@ -12,7 +12,7 @@
       ]
     },
     {
-      "files": "**/*.{ts,js,tsx,jsx,scss,css,less,html,htm,mdx,md,aspx,asp,cshtml,java,php}",
+      "files": "**/*.{ts,js,tsx,jsx,scss,css,less,html,htm,mdx,md,aspx,asp,cshtml,java,php,erb,rb}",
       "patterns": [
         { "from": "forge-typography--caption", "to": "forge-typography--label1" },
         { "from": "forge-typography--subtitle1-secondary", "to": "forge-typography--heading2" },
@@ -30,7 +30,7 @@
         { "from": "@tylertech\/forge\/styles\/", "to": "@tylertech/forge/sass/" },
         { "from": "\\[['\"]_foundation['\"]\\]", "to": "['_core']" },
         { "from": "._foundation", "to": "._core" },
-        
+
         { "from": "forge-popup", "to": "forge-popover" },
         { "from": "forgePopup", "to": "forgePopover" },
         { "from": "ForgePopupModule", "to": "ForgePopoverModule" },
@@ -39,13 +39,13 @@
         { "from": "float-label-type=\"always\"", "to": "float-label" },
         { "from": "floatLabelType = 'always'", "to": "floatLabel = true" },
         { "from": "floatLabelType = \"always\"", "to": "floatLabel = true" },
-        
+
 
         { "from": "forge-switch-select", "to": "forge-switch-change" },
         { "from": "forge-tab-bar-activate", "to": "forge-tab-bar-change" },
         { "from": "ITabBarActivateEventData", "to": "ITabBarChangeEventData" },
         { "from": "forge-tab-interacted", "to": "forge-tab-select" },
-        
+
         { "from": "--mdc-theme-primary", "to": "--forge-theme-primary" },
         { "from": "--mdc-theme-on-primary", "to": "--forge-theme-on-primary" },
         { "from": "--mdc-theme-secondary", "to": "--forge-theme-secondary" },
@@ -65,7 +65,7 @@
         { "from": "--mdc-theme-text-disabled-on-light", "to": "--forge-theme-text-low" },
         { "from": "--mdc-theme-text-primary-on-dark", "to": "--forge-theme-text-high-inverse" },
         { "from": "--forge-drawer-mini-width", "to": "--forge-mini-drawer-width" },
-        
+
         { "from": "--forge-file-picker-max-content-width", "to": "--forge-file-picker-max-width" },
         { "from": "--forge-inline-message-background-color", "to": "--forge-inline-message-background" },
         { "from": "--forge-avatar-theme-background", "to": "--forge-avatar-background" },
