@@ -1,6 +1,6 @@
 {
   "name": "@tylertech/forge-upgrade",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Automated upgrade utility for the Tyler Forge™ based projects.",
   "main": "index.mjs",
   "publishConfig": {
