@@ -12,6 +12,8 @@ jobs:
   wf-config:
     name: Workflow Configuration
     runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.detect-release.outputs.release }}
     strategy:
       matrix:
         node-version: [20]
@@ -31,6 +33,7 @@ jobs:
         run: npm ci
 
       - name: Detect Release Status
+        id: detect-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.FORGE_NPM_TOKEN }}
