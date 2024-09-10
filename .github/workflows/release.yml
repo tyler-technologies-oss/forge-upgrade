@@ -19,6 +19,9 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
+      - name: Prepare Repository
+        run: git fetch --unshallow --tags
+
       - name: Use Node ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
