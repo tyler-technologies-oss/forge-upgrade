@@ -24,6 +24,9 @@
     "type": "git",
     "url": "git+https://github.com/tyler-technologies-oss/forge-upgrade.git"
   },
+  "scripts": {
+    "release": "auto shipit"
+  },
   "files": [
     "configurations/**/*",
     "migrations/**/*",
