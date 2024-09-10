@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import replace from 'replace-in-file';
+import { replaceInFile } from 'replace-in-file';
 import ora from 'ora';
 import path from 'canonical-path';
 import chalk from 'chalk';
@@ -228,7 +228,7 @@ async function executeReplaceOperation({ files, from, to, dry, ignore }) {
       ...ignore
     ]
   };
-  const results = await replace(options);
+  const results = await replaceInFile(options);
   return results
     .filter(result => result.hasChanged)
     .map(result => result.file);

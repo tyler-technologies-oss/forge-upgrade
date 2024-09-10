@@ -35,6 +35,7 @@
         { "from": "forgePopup", "to": "forgePopover" },
         { "from": "ForgePopupModule", "to": "ForgePopoverModule" },
         { "from": "PopupService", "to": "PopoverService" },
+        { "from": "PopupDirective", "to": "PopoverDirective" },
 
         { "from": "float-label-type=\"always\"", "to": "float-label" },
         { "from": "floatLabelType = 'always'", "to": "floatLabel = true" },

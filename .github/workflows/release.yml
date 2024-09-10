@@ -42,6 +42,7 @@ jobs:
             echo "Release: false"
             echo "release=false" >> $GITHUB_OUTPUT
           fi
+
   release:
     name: Release
     needs: wf-config

@@ -32,19 +32,19 @@
   "dependencies": {
     "canonical-path": "^1.0.0",
     "chalk": "^5.3.0",
-    "glob": "^10.3.14",
-    "jscodeshift": "^0.15.2",
-    "ora": "^8.0.1",
+    "glob": "^11.0.0",
+    "jscodeshift": "^17.0.0",
+    "ora": "^8.1.0",
     "posthtml": "^0.16.6",
-    "posthtml-attrs-parser": "^1.1.0",
-    "posthtml-match-helper": "^2.0.0",
-    "replace-in-file": "^7.1.0",
+    "posthtml-attrs-parser": "^1.1.1",
+    "posthtml-match-helper": "^2.0.2",
+    "replace-in-file": "^8.1.0",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "@auto-it/conventional-commits": "^11.1.6",
-    "@auto-it/first-time-contributor": "^11.1.6",
-    "@auto-it/npm": "^11.1.6",
-    "auto": "^11.1.6"
+    "@auto-it/conventional-commits": "^11.2.1",
+    "@auto-it/first-time-contributor": "^11.2.1",
+    "@auto-it/npm": "^11.2.1",
+    "auto": "^11.2.1"
   }
 }
