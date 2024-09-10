@@ -50,7 +50,7 @@ jobs:
     name: Release
     needs: wf-config
     uses: tyler-technologies-oss/forge-automation-shared/.github/workflows/wf-build-release.yml@v2.10.3
-    if: ${{ needs.wf-config.outputs.is-release == 'true' }}
+    if: ${{ needs.wf-config.outputs.release == 'true' }}
     with:
       PRODUCTION_RELEASE: true
     secrets:
