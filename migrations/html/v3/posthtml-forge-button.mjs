@@ -112,6 +112,33 @@ export default function transform(tree) {
 
     return node;
   });
+
+  // Move nested tooltips
+  tree.match([
+    { tag: 'forge-button' },
+    { tag: 'forge-icon-button' },
+    { tag: 'forge-fab' }
+  ], node => {
+    const nestedTooltip = findChildNode(node, child => child.tag === 'forge-tooltip');
+    if (!nestedTooltip) {
+      return node;
+    }
+
+    // Copy all attributes from the nested button to the forge button
+    if (nestedButton.attrs) {
+      node.attrs = {
+        ...node.attrs,
+        ...nestedButton.attrs,
+      };
+    }
+
+    // Place the nested tooltip after the button
+    removeNode(node, nestedTooltip);
+    const index = tree.indexOf(node);
+    tree.splice(index + 1, 0, nestedTooltip);
+
+    return node;
+  });
 }
 
 function migrateButtonAttributes(node, nested) {
