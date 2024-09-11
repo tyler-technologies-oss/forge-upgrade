@@ -134,8 +134,8 @@ export default function transform(tree) {
 
     // Place the nested tooltip after the button
     removeNode(node, nestedTooltip);
-    const index = tree.indexOf(node);
-    tree.splice(index + 1, 0, nestedTooltip);
+    const index = node.parent.indexOf(node);
+    node.parent.splice(index + 1, 0, nestedTooltip);
 
     return node;
   });
