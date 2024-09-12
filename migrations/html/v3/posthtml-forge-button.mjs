@@ -124,14 +124,6 @@ export default function transform(tree) {
       return node;
     }
 
-    // Copy all attributes from the nested button to the forge button
-    if (nestedButton.attrs) {
-      node.attrs = {
-        ...node.attrs,
-        ...nestedButton.attrs,
-      };
-    }
-
     // Place the nested tooltip after the button
     removeNode(node, nestedTooltip);
     const index = node.parent.indexOf(node);
