@@ -114,21 +114,28 @@ export default function transform(tree) {
   });
 
   // Move nested tooltips
-  tree.match([
-    matchHelper(':has(>:is(forge-button, forge-icon-button, forge-fab))')
-  ], node => {
-    const buttons = findAllChildNodes(node, child => child.tag === 'forge-button' || child.tag === 'forge-icon-button' || child.tag === 'forge-fab');
-    buttons.forEach(button => {
-      const tooltip = findChildNode(button, child => child.tag === 'forge-tooltip');
-      if (tooltip) {
-        removeNode(button, tooltip);
-        const index = node.content.indexOf(button);
-        node.content.splice(index + 1, 0, tooltip);
+  const searchContentForButtons = node => {
+    const children = findAllChildNodes(node, child => child);
+    children.forEach(child => {
+      if (['forge-button', 'forge-icon-button', 'forge-fab'].includes(child.tag)) {
+        moveTooltip(node, child);
+      } else {
+        searchContentForButtons(child);
       }
     });
+  };
+  const moveTooltip = (parent, button) => {
+    const tooltip = findChildNode(button, child => child.tag === 'forge-tooltip');
+    if (!tooltip) {
+      return;
+    }
 
-    return node;
-  });
+    removeNode(button, tooltip);
+    const index = parent.content.indexOf(button);
+    parent.content.splice(index + 1, 0, tooltip);
+  };
+  const nodes = Object.values(tree).filter(value => !!value.content);
+  nodes.forEach(tree => searchContentForButtons(tree));
 }
 
 function migrateButtonAttributes(node, nested) {
