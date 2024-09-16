@@ -1,5 +1,5 @@
 import matchHelper from 'posthtml-match-helper';
-import { findChildNode, removeNode, moveChildren, hasAttr } from '../posthtml-helpers.mjs';
+import { findChildNode, removeNode, moveChildren, hasAttr, findAllChildNodes } from '../posthtml-helpers.mjs';
 
 export default function transform(tree) {
   // Toggle icon buttons
@@ -112,6 +112,29 @@ export default function transform(tree) {
 
     return node;
   });
+
+  // Move nested tooltips
+  const searchContentForButtons = (node, tree) => {
+    const children = tree ? Object.values(node).filter(value => !!value.content) : findAllChildNodes(node, child => child);
+    children.forEach(child => {
+      if (['forge-button', 'forge-icon-button', 'forge-fab'].includes(child.tag)) {
+        moveTooltip(node, child);
+      } else {
+        searchContentForButtons(child);
+      }
+    });
+  };
+  const moveTooltip = (parent, button) => {
+    const tooltip = findChildNode(button, child => child.tag === 'forge-tooltip');
+    if (!tooltip) {
+      return;
+    }
+
+    removeNode(button, tooltip);
+    const index = parent.content?.indexOf(button) ?? parent.indexOf(button);
+    parent.content?.splice(index + 1, 0, tooltip) ?? parent.splice(index + 1, 0, tooltip);
+  };
+  searchContentForButtons(tree, true);
 }
 
 function migrateButtonAttributes(node, nested) {
