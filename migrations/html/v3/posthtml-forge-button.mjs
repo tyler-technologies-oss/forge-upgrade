@@ -1,5 +1,5 @@
 import matchHelper from 'posthtml-match-helper';
-import { findChildNode, removeNode, moveChildren, hasAttr } from '../posthtml-helpers.mjs';
+import { findChildNode, removeNode, moveChildren, hasAttr, findAllChildNodes } from '../posthtml-helpers.mjs';
 
 export default function transform(tree) {
   // Toggle icon buttons
@@ -115,19 +115,17 @@ export default function transform(tree) {
 
   // Move nested tooltips
   tree.match([
-    { tag: 'forge-button' },
-    { tag: 'forge-icon-button' },
-    { tag: 'forge-fab' }
+    matchHelper(':has(>:is(forge-button, forge-icon-button, forge-fab))')
   ], node => {
-    const nestedTooltip = findChildNode(node, child => child.tag === 'forge-tooltip');
-    if (!nestedTooltip) {
-      return node;
-    }
-
-    // Place the nested tooltip after the button
-    removeNode(node, nestedTooltip);
-    const index = node.parent.indexOf(node);
-    node.parent.splice(index + 1, 0, nestedTooltip);
+    const buttons = findAllChildNodes(node, child => child.tag === 'forge-button' || child.tag === 'forge-icon-button' || child.tag === 'forge-fab');
+    buttons.forEach(button => {
+      const tooltip = findChildNode(button, child => child.tag === 'forge-tooltip');
+      if (tooltip) {
+        removeNode(button, tooltip);
+        const index = node.content.indexOf(button);
+        node.content.splice(index + 1, 0, tooltip);
+      }
+    });
 
     return node;
   });
