@@ -33,7 +33,7 @@ export async function executeHtmlMigrations({ files, migrations, dryRun }) {
       }
 
       const result = await posthtml(plugins).process(contents);
-      const html = result.html.replace(/=""/g, '');
+      const html = result.html.replace(/(?<!\salt)=""/g, '');
       
       if (html !== contents) {
         modifiedFiles.add(filePath);
