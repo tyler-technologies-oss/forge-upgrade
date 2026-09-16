@@ -29,8 +29,31 @@ use based on the version of Tyler Forge™ that your project is currently using 
 | Forge 2.x | Forge 3.0 (deprecations)  | `forge-3.0-deprecated`
 | TCW 1.x   | Forge 2.0                 | `forge-2.0`
 | TCW 1.x   | Forge 3.0                 | First run with `forge-2.0` then run again with `forge-3.0`
+| `@tylertech/forge-extended` | `@tylertech/forge` | `forge-extended-migration`
 
 > Additional manual upgrades may be required, see version announcement and/or release notes for further information.
+
+### `forge-extended-migration`
+
+`@tylertech/forge-extended` (and its Angular/React wrappers) are being retired — every component they
+shipped now lives in `@tylertech/forge`/`@tylertech/forge-angular`/`@tylertech/forge-react` directly, with
+no API changes. This configuration:
+
+- Replaces the `@tylertech/forge-extended`, `@tylertech/forge-extended-angular`, and
+  `@tylertech/forge-extended-react` entries in `package.json` (`dependencies`, `devDependencies`, or
+  `peerDependencies`) with their `@tylertech/forge`/`@tylertech/forge-angular`/`@tylertech/forge-react`
+  equivalents.
+- Rewrites `@tylertech/forge-extended` imports to the matching `@tylertech/forge/<component>` subpath
+  import, and removes now-unnecessary `defineXComponent()` calls (the new subpath imports register the
+  element as a side effect).
+- Rewrites `@tylertech/forge-extended-angular` imports to `@tylertech/forge-angular`, renaming each
+  `ForgeExtendedXModule` to `ForgeXModule` (component/service/ref class names are unchanged).
+- Rewrites `@tylertech/forge-extended-react` imports to `@tylertech/forge-react` (a pure package rename —
+  wrapper component and prop-type names are unchanged).
+
+Anything not covered by the verified mapping (e.g. the `*ProxyModule` classes or the package-wide
+`ForgeExtendedModule` catch-all in the Angular wrapper, which have no direct equivalent) is left untouched
+with a console warning rather than guessed at — review those manually.
 
 ### Options
 
