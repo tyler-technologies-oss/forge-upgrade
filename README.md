@@ -29,6 +29,7 @@ use based on the version of Tyler Forge™ that your project is currently using 
 | Forge 2.x | Forge 3.0 (deprecations)  | `forge-3.0-deprecated`
 | TCW 1.x   | Forge 2.0                 | `forge-2.0`
 | TCW 1.x   | Forge 3.0                 | First run with `forge-2.0` then run again with `forge-3.0`
+| `@tylertech/forge-internal` | `@tylertech/forge` (footer, app-launcher) | `forge-internal-migration`
 
 > Additional manual upgrades may be required, see version announcement and/or release notes for further information.
 

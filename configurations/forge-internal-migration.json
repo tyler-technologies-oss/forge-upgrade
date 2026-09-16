@@ -1,0 +1,12 @@
+{
+  "name": "Forge Internal Migration",
+  "operations": [
+    {
+      "files": "**/*.{ts,js,tsx,jsx,scss,css,less,html,htm,mdx,md,aspx,asp,cshtml,java,php,erb,rb}",
+      "patterns": [
+        { "from": "--forge-footer-theme-background", "to": "--forge-footer-background" },
+        { "from": "--forge-footer-theme-on-background", "to": "--forge-footer-on-background" }
+      ]
+    }
+  ]
+}

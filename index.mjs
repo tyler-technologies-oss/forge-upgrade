@@ -65,6 +65,21 @@ const CONFIGURATION_MIGRATION_MAP = {
     js: [
       { name: 'Dialog Options', path: './migrations/js/v3/jscodeshift-dialog-options.cjs' },
     ]
+  },
+  'forge-internal-migration': {
+    html: [
+      { name: 'Forge App Launcher', path: './migrations/html/forge-internal/posthtml-forge-app-launcher.mjs' },
+    ],
+    jsx: [
+      { name: 'Forge App Launcher', path: './migrations/jsx/forge-internal/jscodeshift-forge-app-launcher.cjs' },
+      { name: 'Forge Internal Imports', path: './migrations/js/forge-internal/jscodeshift-forge-internal-imports.cjs' },
+    ],
+    js: [
+      { name: 'Forge Internal Imports', path: './migrations/js/forge-internal/jscodeshift-forge-internal-imports.cjs' },
+      { name: 'Forge Angular Internal Imports', path: './migrations/js/forge-internal/jscodeshift-forge-angular-internal-imports.cjs' },
+      { name: 'Forge Extended Angular Imports', path: './migrations/js/forge-internal/jscodeshift-forge-extended-angular-imports.cjs' },
+      { name: 'Forge App Launcher Wire AllApps', path: './migrations/js/forge-internal/jscodeshift-forge-app-launcher-wire-allapps.cjs' },
+    ]
   }
 }
 
