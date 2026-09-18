@@ -7,7 +7,7 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import crypto from 'crypto';
 import ora from 'ora';
-import { logBreak, logError, logInfo } from './log.mjs';
+import { logBreak, logError, logInfo, logWarn } from './log.mjs';
 import { fileURLToPath } from 'url';
 
 const filename = fileURLToPath(import.meta.url);
@@ -48,6 +48,50 @@ export async function executeHtmlMigrations({ files, migrations, dryRun }) {
     logBreak();
   } catch (e) {
     spinner.fail()
+    logError(e.stack);
+  }
+
+  return modifiedFiles;
+}
+
+/**
+ * Executes JSON migrations (e.g. `package.json` dependency rewrites). Each migration module exports a
+ * `(pkg, { filePath, logWarn }) => pkg | null` transformer; a `null` return means that migration made no
+ * changes to this file.
+ */
+export async function executeJsonMigrations({ files, migrations, dryRun }) {
+  const spinner = ora(`Executing JSON migrations... ${migrations.map(m => `\n  - ${m.name}`).join('')}`).start();
+  const modifiedFiles = new Set();
+
+  try {
+    for (const filePath of files) {
+      const contents = fs.readFileSync(filePath, 'utf-8');
+      let pkg = JSON.parse(contents);
+      let changed = false;
+
+      for (const { name, path: modulePath } of migrations) {
+        const moduleUrl = pathToFileURL(cpath.join(packageRoot, modulePath));
+        const module = await import(moduleUrl);
+        const transform = module.default ?? module;
+        const result = transform(pkg, { filePath, logWarn: message => logWarn(`[${name}] ${message}`) });
+        if (result) {
+          pkg = result;
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        modifiedFiles.add(filePath);
+        if (!dryRun) {
+          fs.writeFileSync(filePath, `${JSON.stringify(pkg, null, 2)}\n`, 'utf-8');
+        }
+      }
+    }
+
+    spinner.succeed();
+    logBreak();
+  } catch (e) {
+    spinner.fail();
     logError(e.stack);
   }
 

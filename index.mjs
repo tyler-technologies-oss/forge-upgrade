@@ -9,7 +9,7 @@ import { hideBin } from 'yargs/helpers';
 import fs from 'fs';
 import { glob } from 'glob';
 import { fileURLToPath } from 'url';
-import { executeHtmlMigrations, executeJscodeshiftMigrations } from './migration-utils.mjs';
+import { executeHtmlMigrations, executeJscodeshiftMigrations, executeJsonMigrations } from './migration-utils.mjs';
 import { logInfo, logError, logSuccess, logWarn, logBreak } from './log.mjs';
 
 const filename = fileURLToPath(import.meta.url);
@@ -65,6 +65,21 @@ const CONFIGURATION_MIGRATION_MAP = {
     js: [
       { name: 'Dialog Options', path: './migrations/js/v3/jscodeshift-dialog-options.cjs' },
     ]
+  },
+  'forge-extended-migration': {
+    json: [
+      { name: 'Package Dependencies', path: './migrations/json/forge-extended/package-json-rewrite.cjs' },
+    ],
+    jsx: [
+      { name: 'Forge Extended Imports', path: './migrations/js/forge-extended/jscodeshift-forge-extended-imports.cjs' },
+      { name: 'Forge Extended Angular Imports', path: './migrations/js/forge-extended/jscodeshift-forge-extended-angular-imports.cjs' },
+      { name: 'Forge Extended React Imports', path: './migrations/js/forge-extended/jscodeshift-forge-extended-react-imports.cjs' },
+    ],
+    js: [
+      { name: 'Forge Extended Imports', path: './migrations/js/forge-extended/jscodeshift-forge-extended-imports.cjs' },
+      { name: 'Forge Extended Angular Imports', path: './migrations/js/forge-extended/jscodeshift-forge-extended-angular-imports.cjs' },
+      { name: 'Forge Extended React Imports', path: './migrations/js/forge-extended/jscodeshift-forge-extended-react-imports.cjs' },
+    ]
   }
 }
 
@@ -79,11 +94,11 @@ try {
   const configuration = argv.configuration ?? DEFAULT_UPGRADE_CONFIGURATION;
   const filePath = path.join(packageRoot, 'configurations', `${configuration}.json`);
   const file = fs.readFileSync(filePath, 'utf-8');
-  const { name, operations } = JSON.parse(file);
+  const { name, operations = [] } = JSON.parse(file);
   const rootPath = argv.path ?? '.';
   const changedFiles = new Set();
 
-  if (!name || !operations || !operations.length) {
+  if (!name) {
     throw new Error(`Invalid upgrade configuration specified: "${configuration}"`);
   }
 
@@ -190,6 +205,23 @@ try {
           parser: 'ts'
         });
         modifiedJSFiles.forEach(file => changedFiles.add(file));
+      }
+    }
+
+    // JSON (e.g. package.json)
+    const jsonMigrations = CONFIGURATION_MIGRATION_MAP[configuration].json;
+    if (jsonMigrations?.length) {
+      const globPath = path.join(rootPath, '**/package.json');
+      const jsonFiles = await glob(globPath, { ignore: [NODE_MODULES_GLOB, ...ignoreGlobs] });
+      if (jsonFiles.length) {
+        logInfo(`Found ${jsonMigrations.length} JSON migration(s)\n`);
+
+        const modifiedJsonFiles = await executeJsonMigrations({
+          files: jsonFiles,
+          migrations: jsonMigrations,
+          dryRun
+        });
+        modifiedJsonFiles.forEach(file => changedFiles.add(file));
       }
     }
   }
